@@ -35,7 +35,7 @@ class MyPromise {
         if (value && value.then) {
             value.then((val) => {
                 this._onfulfilled(val);
-            }, this._onRejected);
+            }, (reason) => this._onRejected(reason));
             return;
         }
 
@@ -53,14 +53,6 @@ class MyPromise {
     _onRejected(reason) {
         // 防止多次触发
         if (this._status !== 0) return;
-        
-        // 返回的是promise，要等待完成
-        if (value && value.then) {
-            value.then(null, (_reason) => {
-                this._onRejected(_reason);
-            }, this._onRejected);
-            return;
-        }
 
         this._doRejected(reason);
     }
@@ -217,7 +209,7 @@ MyPromise.race = function () {
 
         function setResult(value) {
             if (done) return;
-            
+
             done = true;
             resolve(value);
         }
