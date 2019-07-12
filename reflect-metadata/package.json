@@ -1,5 +1,5 @@
 {
-  "name": "reflect-metadata",
+  "name": "reflect",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,6 +7,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
+    "@types/node": "^12.6.2",
     "typescript": "^3.5.3"
   },
   "scripts": {

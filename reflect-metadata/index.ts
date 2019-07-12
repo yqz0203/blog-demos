@@ -42,10 +42,7 @@ const funcDecorator = () => (
   console.log(returntype);
 };
 
-const propertyDecorator = () => (
-  target: any,
-  propertyKey: string,
-) => {
+const propertyDecorator = () => (target: any, propertyKey: string) => {
   const properties = Reflect.getOwnMetadata('design:type', target, propertyKey);
   const parameters = Reflect.getOwnMetadata(
     'design:paramtypes',
