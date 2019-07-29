@@ -28,11 +28,14 @@
       <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
       <div>年龄：{{ age }}</div>
       <div>性别：{{ genderText }}</div>
+
+      <p></p>
+
+      <div :for="{{ list }}" :for-key="item">
+        <p>{{ item.name }} {{ name }} <button data-id="{{item.name}}" @click="delete">x</button></p>
+      </div>
     </div>
 
-    <div :for="{{ list }}" :for-key="{{ item }}">
-      <p>{{ item }}</p>
-    </div>
     <script src="./dist/index.js"></script>
   </body>
 </html>
