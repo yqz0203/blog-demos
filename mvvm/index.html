@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <script src="https://cdn.bootcss.com/require.js/2.3.6/require.min.js"></script>
+  </head>
+  <body>
+    <div id="scope-1">
+      <h2>输入</h2>
+      <div>姓名：<input :value="{{ name }}" /></div>
+      <div>年龄：<input type="number" :value="{{ age }}" /></div>
+      <div>
+        性别：<select :value="{{ gender }}">
+          <option value="1">男</option>
+          <option value="0">女</option>
+        </select>
+      </div>
+      <p>
+        <button @click="submit">点我变性</button>
+        <button @click="reset">重置</button>
+      </p>
+
+      <h2>信息</h2>
+      <div>当前时间：{{ currentTimeDateStr }}</div>
+      <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
+      <div>年龄：{{ age }}</div>
+      <div>性别：{{ genderText }}</div>
+    </div>
+
+    <div :for="{{ list }}" :for-key="{{ item }}">
+      <p>{{ item }}</p>
+    </div>
+    <script src="./dist/index.js"></script>
+  </body>
+</html>
