@@ -1,3 +1,5 @@
+import Watcher from './Watcher';
+
 function createEl(html: string) {
   const div = document.createElement('div');
   div.innerHTML = html;
@@ -71,6 +73,7 @@ class DomWatcher {
   }
 
   traversEL(el: HTMLElement) {
+    this.traversAttr(el);
     for (let i = 0; i < el.childNodes.length; i++) {
       const node: any = el.childNodes[i];
       const nodeName = node.nodeName.toLowerCase();
@@ -108,23 +111,20 @@ class DomWatcher {
           const valueRegexp = /{{([^}]+)}}/g;
           let result = valueRegexp.exec(node.attributes[':for'].value);
           if (result && result[1].trim()) {
-            this.context[result[1].trim()].forEach((item: any) => {
-              const newEl = document.createElement(node.nodeName);
-              newEl.innerHTML = node.innerHTML;
-              new ArrayController(newEl, {
-                data: item,
-                key: (node.attributes[':for-key']
-                  ? node.attributes[':for-key'].value
-                  : 'item').trim(),
-                parentContext: this.context,
-                startArchor,
-                endArchor,
-                tokens: this.tokens,
-              });
+            const key = result[1].trim();
+            new ArrayContext(node, {
+              data: this.context[key],
+              key: (node.attributes[':for-key']
+                ? node.attributes[':for-key'].value
+                : 'item'
+              ).trim(),
+              parentContext: this.context,
+              startArchor,
+              endArchor,
+              tokens: this.tokens,
             });
           }
         } else {
-          this.traversAttr(node);
           this.traversEL(node);
         }
       }
@@ -319,48 +319,81 @@ class Controller<T extends object> {
   }
 }
 
-class ArrayController {
-  parentContet: any;
-  tokens: { [key: string]: Token } = {};
+class ArrayContext {
+  watchers: any[] = [];
+  config: any;
+  data: any[];
   constructor(
     el: HTMLElement,
     config: {
       key: string;
       parentContext: any;
-      data: any;
+      data: any[];
+      tokens: any;
       startArchor: Comment;
       endArchor: Comment;
-      tokens: { [key: string]: Token };
     }
   ) {
     const { data, key, parentContext, tokens, startArchor, endArchor } = config;
+    this.config = config;
 
-    const context = {};
+    data.forEach(item => {
+      const _tokens = { ...tokens };
+      const context = { ...parentContext };
+      mergeContext(context, parentContext);
 
-    this.tokens['item'] = new Token({
-      context: context,
-      key,
-      // @ts-ignore
-      value: data,
+      _tokens[config.key] = new Token({
+        context: context,
+        key: config.key,
+        value: item,
+      });
+      el.removeAttribute(':for');
+      el.removeAttribute(':for-key');
+      const node = el.cloneNode(true);
+      this.watchers.push(
+        new DomWatcher(context, node, {
+          ..._tokens,
+        })
+      );
+      startArchor.parentNode!.insertBefore(node, endArchor);
     });
 
-    mergeContext(context, parentContext);
+    this.data = data;
+  }
 
-    new DomWatcher(context, el, {
-      ...this.tokens,
-    });
-
-    startArchor.parentNode!.insertBefore(el, endArchor);
+  mutableArray() {
+    const { value, parentContext } = this.config;
   }
 }
 
-const root = document.getElementById('scope-1')!;
+class ArrayItem {
+  constructor(
+    el: HTMLElement,
+    config: { key: any; context: any; data: any; tokens: any }
+  ) {
+    const tokens = { ...config.tokens };
+    tokens[config.key] = new Token({
+      context: config.context,
+      key: config.key,
+      // @ts-ignore
+      value: data,
+    });
+    new DomWatcher(config.context, el, {
+      ...config.tokens,
+    });
+  }
+}
+
+const root = document.getElementById('app')!;
 
 const initialData = {
   name: 'John',
   age: 10,
   gender: 1,
   currentTime: new Date(),
+  extra: {
+    like: 'game',
+  },
   list: [{ name: 'yqz' }, { name: 'shenjingwei' }],
 };
 
@@ -400,3 +433,29 @@ new Controller(root, {
     },
   },
 });
+
+const obj = {
+  a: {
+    b: 1,
+  },
+};
+
+const watcher = new Watcher({
+  a: 10,
+  b: {
+    c: 12,
+  },
+});
+
+watcher.addListener('b', (a, b) => {
+  console.log('b changed', a, b);
+});
+
+watcher.addListener('b.c', (a, b) => {
+  console.log('b.c changed', a, b);
+});
+
+watcher._data.b = { c: 15 };
+watcher._data.b.c = 'wahahaha';
+
+export default null;
