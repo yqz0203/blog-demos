@@ -1,6 +1,6 @@
 import MVVM from './MVVM';
 
-const initialData = {
+const initialData = () => ({
   name: 'John',
   age: 10,
   gender: 1,
@@ -8,12 +8,13 @@ const initialData = {
   extra: {
     like: 'game',
   },
+  showInfo: true,
   list: [{ name: 'yqz' }, { name: 'shenjingwei' }],
-};
+});
 
-new MVVM({
+const mvvm = new MVVM({
   el: document.getElementById('app')!,
-  data: initialData,
+  data: initialData(),
   created(this: any) {
     this.interval = setInterval(() => {
       this.currentTime = new Date();
@@ -26,8 +27,8 @@ new MVVM({
     genderText() {
       return this.gender == 1 ? '男' : '女';
     },
-    currentTimeDateStr() {
-      return this.currentTime.toLocaleTimeString();
+    currentTimeStr() {
+      return this.currentTime.toLocaleString();
     },
   },
   methods: {
@@ -35,12 +36,13 @@ new MVVM({
       this.gender = this.gender == 1 ? 0 : 1;
     },
 
+    toggleShowInfo() {
+      this.showInfo = !this.showInfo;
+    },
+
     reset() {
-      this.name = 'john';
-      Object.keys(initialData).forEach(k => {
-        // @ts-ignore
-        this[k] = initialData[k];
-      });
+      const newData = initialData();
+      this.setData(newData);
     },
 
     delete(e: any) {
@@ -48,5 +50,9 @@ new MVVM({
     },
   },
 });
+
+// setTimeout(() => {
+//   mvvm.destroy();
+// }, 3000);
 
 export default null;

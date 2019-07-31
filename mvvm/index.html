@@ -20,15 +20,22 @@
       <div>爱好：<input type="text" :value="{{ extra.like }}" /></div>
       <p>
         <button @click="changeGender">点我变性</button>
+        <button @click="toggleShowInfo">
+          {{ showInfo ? '隐藏信息' : '显示信息' }}
+        </button>
         <button @click="reset">重置</button>
       </p>
 
-      <h2>信息</h2>
-      <div>当前时间：{{ currentTimeDateStr }}</div>
-      <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
-      <div>年龄：{{ age }}</div>
-      <div>性别：{{ genderText }}</div>
-      <div>爱好：{{ extra.like }}</div>
+      <div style="display:{{ showInfo ? 'block' : 'none' }}">
+        <h2>信息</h2>
+        <div>当前时间：{{ currentTimeStr }}</div>
+        <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
+        <div>年龄：{{ age }}</div>
+        <div>
+          性别：<span>{{ genderText }}</span>
+        </div>
+        <div>爱好：{{ extra.like }}</div>
+      </div>
     </div>
 
     <script src="./dist/main.js"></script>

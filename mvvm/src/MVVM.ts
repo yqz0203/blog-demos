@@ -1,22 +1,11 @@
 import Watcher from './Watcher';
-import { getValue, setValue } from './utils';
-
-function mergeDescriptor(a: any, b: any) {
-  for (let key in b) {
-    Object.defineProperty(
-      a,
-      key,
-      // @ts-ignore
-      Object.getOwnPropertyDescriptor(b, key)
-    );
-  }
-}
+import { getValue, setValue, parseExpression } from './utils';
 
 interface MVVMConfig {
   el: HTMLElement;
   data: any;
-  created?: (() => void) | undefined;
-  destroy?: (() => void) | undefined;
+  created?: () => void;
+  destroy?: () => void;
   computed: any;
   methods: any;
 }
@@ -24,24 +13,39 @@ interface MVVMConfig {
 class MVVM {
   el: HTMLElement;
   watcher: Watcher;
-  config: MVVMConfig;
+  private config: MVVMConfig;
   [key: string]: any;
   constructor(config: MVVMConfig) {
     this.el = config.el;
-    this.watcher = new Watcher(config.data);
+    this.watcher = new Watcher(this, config.data);
     this.config = config;
 
-    mergeDescriptor(this, this.watcher._data);
+    this.initLifeCycles();
     this.initMethods();
     this.traversEL(config.el);
     this.initComputed();
-
-    if (config.created) {
-      config.created.call(this);
-    }
+    this.created(this);
   }
 
-  initComputed() {
+  setData(newData: any) {
+    if (!newData) return;
+    Object.keys(newData).forEach(k => {
+      // @ts-ignore
+      this[k] = newData[k];
+    });
+  }
+
+  private initLifeCycles() {
+    this['created'] = () => {
+      this.config.created && this.config.created.call(this);
+    };
+
+    this['destroy'] = () => {
+      this.config.destroy && this.config.destroy.call(this);
+    };
+  }
+
+  private initComputed() {
     const computed = this.config.computed || {};
 
     const computedKeys = Object.keys(computed);
@@ -60,14 +64,14 @@ class MVVM {
     });
   }
 
-  initMethods() {
+  private initMethods() {
     Object.keys(this.config.methods).forEach(key => {
       // @ts-ignore
       this[key] = this.config.methods[key].bind(this);
     });
   }
 
-  traversEL(el: HTMLElement) {
+  private traversEL(el: HTMLElement) {
     this.traversAttr(el);
     for (let i = 0; i < el.childNodes.length; i++) {
       const node: any = el.childNodes[i];
@@ -82,7 +86,10 @@ class MVVM {
         let nodeValue = node.nodeValue!;
 
         let setNodeValue = (val: string) => {
+          // chrome 不会触发重绘
+          // if (node.nodeValue !== val) {
           node.nodeValue = val;
+          // }
         };
 
         if (isFormEl) {
@@ -92,16 +99,21 @@ class MVVM {
           setNodeValue = (val: string) => {
             node.value = val;
           };
+          (node as HTMLElement).removeAttribute(':value');
         }
 
-        this.parseTemplateAndSet(nodeValue, setNodeValue, node);
+        this.parseTemplateAndSet(
+          nodeValue,
+          setNodeValue,
+          isFormEl ? node : undefined
+        );
       } else if (node.nodeType === 1) {
         this.traversEL(node);
       }
     }
   }
 
-  traversAttr(node: HTMLElement) {
+  private traversAttr(node: HTMLElement) {
     for (let i = 0, l = node.attributes.length; i < l; i++) {
       const attr = node.attributes[i];
       // @ts-ignore
@@ -111,6 +123,7 @@ class MVVM {
         if (this[eventFuncName]) {
           node.addEventListener(eventName, this[eventFuncName]);
         }
+        node.removeAttribute(attr.name);
       } else {
         this.parseTemplateAndSet(attr.value, (val: string) => {
           node.setAttribute(attr.name, val);
@@ -119,7 +132,7 @@ class MVVM {
     }
   }
 
-  parseTemplateAndSet(
+  private parseTemplateAndSet(
     template: string,
     setNodeValue: (val: string) => void,
     formNode?: any
@@ -138,7 +151,13 @@ class MVVM {
       const { index } = result;
       let tpl = result[1];
       let fullTpl = result[0];
-      let scopeKeys: string[] = tpl.match(/[_-a-zA-z123456789.]+/g) as any;
+      let scopeKeys: string[] = tpl.match(
+        /[_-a-zA-z123456789.]+(?!.+\()/g
+      ) as any;
+
+      const parsed = parseExpression(tpl);
+      scopeKeys = parsed.dependencies;
+
       if (formNode) {
         const nodeName = formNode.nodeName.toLowerCase();
         switch (nodeName) {
@@ -171,10 +190,7 @@ class MVVM {
         result = null;
       }
 
-      // 过滤到已有的变量
-      // scopeKeys = scopeKeys.filter(k => this.tokens[k] !== undefined);
-
-      const fn = new Function('return this.' + tpl).bind(this);
+      const fn = new Function('return ' + parsed.expression).bind(this);
 
       allScopeKeys = [...allScopeKeys, ...scopeKeys];
       calContexts = [
@@ -214,6 +230,13 @@ class MVVM {
 
     allScopeKeys.forEach(k => {
       const listener = () => {
+        const val = calValue();
+        // 防止表单元素光标出错
+        if (formNode) {
+          if (formNode.value === val) {
+            return;
+          }
+        }
         setNodeValue(calValue());
       };
       this.watcher.addListener(k, listener);

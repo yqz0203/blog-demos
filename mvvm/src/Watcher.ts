@@ -1,4 +1,4 @@
-import { getValue, isPlainObject } from './utils';
+import { getValue, isPlainObject, mergeDescriptor } from './utils';
 
 type Callback = (val: any, oldValue: any) => void;
 type CallbackWithPath = (val: any, oldValue: any, path: string) => void;
@@ -32,12 +32,13 @@ class Token<T = any> {
 const GLOABL_KEY = 'GLOABL';
 
 class Watcher {
-  _data: { [key: string]: any };
+  owner: any;
   listeners: {
     [path: string]: CallbackWithPath[];
   } = {};
-  constructor(data: any) {
-    this._data = this.traverseData(data);
+  constructor(owner: any, data: any) {
+    mergeDescriptor(owner, this.traverseData(data));
+    this.owner = owner;
   }
 
   traverseData(data: any, path = '') {
@@ -60,13 +61,13 @@ class Watcher {
   }
 
   handleValueChange(fullPath: string, newValue: any, oldValue: any) {
-    let parent = this._data;
+    let parent = this.owner;
     const pathArr = fullPath.split('.');
     if (pathArr.length >= 2) {
       parent = new Function(
         'data',
         `return data.${pathArr.slice(0, pathArr.length - 1).join('.')}`
-      )(this._data);
+      )(this.owner);
     }
 
     const key: string = pathArr.pop()!;
@@ -114,7 +115,7 @@ class Watcher {
         const k = key.replace(path + '.', '');
         const oldV = getValue(oldValue, k);
         const newV = getValue(newValue, k);
-        this.listeners[key].forEach(cb => cb(newV, oldV, path));
+        this.listeners[key].forEach(cb => cb(newV, oldV, key));
       }
     });
 
