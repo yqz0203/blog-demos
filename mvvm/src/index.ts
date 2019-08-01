@@ -4,6 +4,7 @@ const initialData = () => ({
   name: 'John',
   age: 10,
   gender: 1,
+  submiting: false,
   currentTime: new Date(),
   extra: {
     like: 'game',
@@ -12,7 +13,7 @@ const initialData = () => ({
   list: [{ name: 'yqz' }, { name: 'shenjingwei' }],
 });
 
-const mvvm = new MVVM({
+new MVVM({
   el: document.getElementById('app')!,
   data: initialData(),
   created(this: any) {
@@ -45,14 +46,15 @@ const mvvm = new MVVM({
       this.setData(newData);
     },
 
-    delete(e: any) {
-      console.log(e.target.dataset.id);
+    submit() {
+      this.submiting = true;
+
+      setTimeout(() => {
+        alert('提交成功');
+        this.submiting = false;
+      }, 1000);
     },
   },
 });
-
-// setTimeout(() => {
-//   mvvm.destroy();
-// }, 3000);
 
 export default null;

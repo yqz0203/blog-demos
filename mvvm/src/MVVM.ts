@@ -1,5 +1,6 @@
 import Watcher from './Watcher';
-import { getValue, setValue, parseExpression } from './utils';
+import { getValue, toRealValue, setValue, parseExpression } from './utils';
+import Directive, { DirectiveConfig } from './Directive';
 
 interface MVVMConfig {
   el: HTMLElement;
@@ -11,13 +12,19 @@ interface MVVMConfig {
 }
 
 class MVVM {
-  el: HTMLElement;
-  watcher: Watcher;
+  static directiveDefinitions: { [key: string]: DirectiveConfig } = {};
+  static directive = function(name: string, config: DirectiveConfig) {
+    MVVM.directiveDefinitions[name] = config;
+  };
+
+  $el: HTMLElement;
+  $watcher: Watcher;
   private config: MVVMConfig;
   [key: string]: any;
+  private directives: Directive[] = [];
   constructor(config: MVVMConfig) {
-    this.el = config.el;
-    this.watcher = new Watcher(this, config.data);
+    this.$el = config.el;
+    this.$watcher = new Watcher(this, config.data);
     this.config = config;
 
     this.initLifeCycles();
@@ -41,6 +48,8 @@ class MVVM {
     };
 
     this['destroy'] = () => {
+      this.directives.forEach(d => d.destroy());
+      this.$watcher.removeAllListeners();
       this.config.destroy && this.config.destroy.call(this);
     };
   }
@@ -49,18 +58,18 @@ class MVVM {
     const computed = this.config.computed || {};
 
     const computedKeys = Object.keys(computed);
-    this.watcher.addListener('', (n, o, key) => {
+    this.$watcher.addListener('', (n, o, key) => {
       if (computedKeys.indexOf(key) >= 0) {
         return;
       }
       computedKeys.forEach(ckey => {
         this[ckey] = computed[ckey].call(this);
-        this.watcher.trigger(ckey, this[ckey], '');
+        this.$watcher.trigger(ckey, this[ckey], '');
       });
     });
     computedKeys.forEach(ckey => {
       this[ckey] = computed[ckey].call(this);
-      this.watcher.trigger(ckey, this[ckey], '');
+      this.$watcher.trigger(ckey, this[ckey], '');
     });
   }
 
@@ -75,14 +84,9 @@ class MVVM {
     this.traversAttr(el);
     for (let i = 0; i < el.childNodes.length; i++) {
       const node: any = el.childNodes[i];
-      const nodeName = node.nodeName.toLowerCase();
-      const isFormEl =
-        ['input', 'textArea', 'checkbox', 'select', 'radio'].indexOf(
-          nodeName
-        ) >= 0;
 
       // text
-      if (node.nodeType === 3 || isFormEl) {
+      if (node.nodeType === 3) {
         let nodeValue = node.nodeValue!;
 
         let setNodeValue = (val: string) => {
@@ -92,21 +96,7 @@ class MVVM {
           // }
         };
 
-        if (isFormEl) {
-          nodeValue = node.attributes[':value']
-            ? node.attributes[':value'].value
-            : '';
-          setNodeValue = (val: string) => {
-            node.value = val;
-          };
-          (node as HTMLElement).removeAttribute(':value');
-        }
-
-        this.parseTemplateAndSet(
-          nodeValue,
-          setNodeValue,
-          isFormEl ? node : undefined
-        );
+        this.parseTemplateAndSet(nodeValue, setNodeValue);
       } else if (node.nodeType === 1) {
         this.traversEL(node);
       }
@@ -114,22 +104,53 @@ class MVVM {
   }
 
   private traversAttr(node: HTMLElement) {
+    const shouldRemoveAttrs: string[] = [];
+
     for (let i = 0, l = node.attributes.length; i < l; i++) {
       const attr = node.attributes[i];
+
+      if (!attr) return;
+
+      if (attr.name.startsWith('x-')) {
+        const directiveName = attr.name.replace(/^x-/, '');
+        const dd = MVVM.directiveDefinitions[directiveName];
+
+        if (!dd) {
+          console.warn('未知的指令：', directiveName);
+        } else {
+          this.directives.push(new Directive(this, node, attr.value, dd));
+        }
+
+        shouldRemoveAttrs.push(attr.name);
+      }
+      if (attr.name.startsWith(':')) {
+        const attrName = attr.name.substr(1);
+        this.parseTemplateAndSet(attr.value, (val: string) => {
+          // @ts-ignore
+          node[attrName] = toRealValue(val);
+        });
+
+        shouldRemoveAttrs.push(attr.name);
+      }
       // @ts-ignore
-      if (attr.name.startsWith('@')) {
+      else if (attr.name.startsWith('@')) {
         const eventName = attr.name.substr(1);
         const eventFuncName = attr.value;
         if (this[eventFuncName]) {
           node.addEventListener(eventName, this[eventFuncName]);
         }
-        node.removeAttribute(attr.name);
+
+        shouldRemoveAttrs.push(attr.name);
       } else {
-        this.parseTemplateAndSet(attr.value, (val: string) => {
+        let cb = (val: string) => {
           node.setAttribute(attr.name, val);
-        });
+        };
+
+        this.parseTemplateAndSet(attr.value, cb);
       }
     }
+
+    shouldRemoveAttrs.forEach(name => node.removeAttribute(name));
   }
 
   private parseTemplateAndSet(
@@ -157,38 +178,6 @@ class MVVM {
 
       const parsed = parseExpression(tpl);
       scopeKeys = parsed.dependencies;
-
-      if (formNode) {
-        const nodeName = formNode.nodeName.toLowerCase();
-        switch (nodeName) {
-          case 'input':
-          case 'textarea': {
-            formNode.addEventListener('input', (e: any) => {
-              setValue(this, scopeKeys[0], e.target.value);
-            });
-            break;
-          }
-          case 'select': {
-            setNodeValue = (val: string) => {
-              formNode.value = val;
-              const options = formNode.querySelectorAll('option');
-              for (let i = 0, l = options.length; i < l; i++) {
-                const item = options[i];
-                if (item.value === val.toString()) {
-                  item.selected = true;
-                } else {
-                  item.selected = false;
-                }
-              }
-            };
-            formNode.addEventListener('change', (e: any) => {
-              setValue(this, scopeKeys[0], e.target.value);
-            });
-            break;
-          }
-        }
-        result = null;
-      }
 
       const fn = new Function('return ' + parsed.expression).bind(this);
 
@@ -239,10 +228,32 @@ class MVVM {
         }
         setNodeValue(calValue());
       };
-      this.watcher.addListener(k, listener);
+      this.$watcher.addListener(k, listener);
       listener();
     });
   }
 }
+
+// 内置指令
+MVVM.directive('model', {
+  bind(el: any, binding) {
+    this.callback = (e: any) => {
+      const val = e.target.value;
+      setValue(this.$owner, binding.expression, val);
+    };
+    el.addEventListener('input', this.callback);
+    el.value = binding.value;
+  },
+  update(el: any, binding) {
+    el.value = binding.value;
+  },
+  unbind(el) {
+    el.removeEventListener('input', this.callback);
+  },
+});
+
+MVVM.directive('show', (el, binding) => {
+  el.style.display = binding.value ? '' : 'none';
+});
 
 export default MVVM;

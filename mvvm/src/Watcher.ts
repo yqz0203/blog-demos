@@ -98,6 +98,22 @@ class Watcher {
     this.listeners[path].push(cb);
   }
 
+  removeListener(path: string, cb?: CallbackWithPath) {
+    if (!path) {
+      path = GLOABL_KEY;
+    }
+
+    if (!cb) {
+      delete this.listeners[path];
+    } else {
+      (this.listeners[path] || []).filter(item => item === cb);
+    }
+  }
+
+  removeAllListeners() {
+    this.listeners = {};
+  }
+
   trigger(path: string, newValue: any, oldValue: any) {
     if (!path) {
       path = GLOABL_KEY;

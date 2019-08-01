@@ -91,3 +91,21 @@ export function parseExpression(expression: string) {
     dependencies,
   };
 }
+
+export function toRealValue(value: any) {
+  if (!value) return value;
+
+  if (/^[0-9]?(\.[0-9]+)?$/.test(value)) {
+    return Number(value);
+  } else if (value === 'true') {
+    return true;
+  } else if (value === 'false') {
+    return false;
+  } else if (value === 'null') {
+    return null;
+  } else if (value === 'undefined') {
+    return undefined;
+  }
+
+  return value;
+}

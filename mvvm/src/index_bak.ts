@@ -440,22 +440,22 @@ const obj = {
   },
 };
 
-const watcher = new Watcher({
-  a: 10,
-  b: {
-    c: 12,
-  },
-});
+// const watcher = new Watcher({
+//   a: 10,
+//   b: {
+//     c: 12,
+//   },
+// });
 
-watcher.addListener('b', (a, b) => {
-  console.log('b changed', a, b);
-});
+// watcher.addListener('b', (a, b) => {
+//   console.log('b changed', a, b);
+// });
 
-watcher.addListener('b.c', (a, b) => {
-  console.log('b.c changed', a, b);
-});
+// watcher.addListener('b.c', (a, b) => {
+//   console.log('b.c changed', a, b);
+// });
 
-watcher._data.b = { c: 15 };
-watcher._data.b.c = 'wahahaha';
+// watcher._data.b = { c: 15 };
+// watcher._data.b.c = 'wahahaha';
 
 export default null;
