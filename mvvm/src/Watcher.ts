@@ -3,24 +3,24 @@ import { getValue, isPlainObject, mergeDescriptor } from './utils';
 type Callback = (val: any, oldValue: any) => void;
 type CallbackWithPath = (val: any, oldValue: any, path: string) => void;
 
-class Token<T = any> {
-  private _value: T;
-  // @ts-ignore
-  constructor(config: { obj: any; key: string; value: T; cb: Callback }) {
+class Token {
+  private value: any;
+
+  constructor(config: { obj: any; key: string; value: any; cb: Callback }) {
     const scope = this;
     const { key, value, obj, cb } = config;
 
-    this._value = value;
+    this.value = value;
 
     Object.defineProperty(obj, key, {
       enumerable: true,
       configurable: true,
       get: function reactiveSetter() {
-        return scope._value;
+        return scope.value;
       },
       set: function reactiveGetter(value) {
-        const oldValue = scope._value;
-        scope._value = value;
+        const oldValue = scope.value;
+        scope.value = value;
         if (oldValue !== value) {
           cb(value, oldValue);
         }
@@ -135,17 +135,15 @@ class Watcher {
       }
     });
 
-    this.listeners[GLOABL_KEY].forEach(cb => cb(newValue, oldValue, path));
+    (this.listeners[GLOABL_KEY] || []).forEach(cb =>
+      cb(newValue, oldValue, path)
+    );
   }
 }
 
-// const obj = {
-//   a: {
-//     b: 1,
-//   },
-// };
+// const owner: any = {};
 
-// const watcher = new Watcher({
+// const watcher = new Watcher(owner, {
 //   a: 10,
 //   b: {
 //     c: 12,
@@ -160,7 +158,7 @@ class Watcher {
 //   console.log('b.c changed', a, b);
 // });
 
-// watcher._data.b = { c: 15 };
-// watcher._data.b.c = 'wahahaha';
+// owner.b = { c: 15 };
+// owner.b.c = 'wahahaha';
 
 export default Watcher;
