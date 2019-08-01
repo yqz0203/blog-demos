@@ -125,7 +125,7 @@ class MVVM {
       }
       if (attr.name.startsWith(':')) {
         const attrName = attr.name.substr(1);
-        this.parseTemplateAndSet(attr.value, (val: string) => {
+        this.parseTemplateAndSet('{{' + attr.value + '}}', (val: string) => {
           // @ts-ignore
           node[attrName] = toRealValue(val);
         });
