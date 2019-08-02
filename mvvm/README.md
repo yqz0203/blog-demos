@@ -1,6 +1,6 @@
 # MVVM DEMO
 
-## RUN
+## Run
 
 ### Fisrt
 
@@ -14,7 +14,7 @@ yarn i
 yarn start
 ```
 
-### Finall
+### Finally
 
 Open `index.html` with chrome
 
