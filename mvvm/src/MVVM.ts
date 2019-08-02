@@ -151,6 +151,9 @@ MVVM.directive('if', {
       this.onShow();
     }
   },
+  unbind(el) {
+    this.onHide();
+  },
 });
 
 export default MVVM;
