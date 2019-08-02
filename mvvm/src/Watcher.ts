@@ -150,12 +150,12 @@ class Watcher {
 //   },
 // });
 
-// watcher.addListener('b', (a, b) => {
-//   console.log('b changed', a, b);
+// watcher.addListener('b', (p1, p2) => {
+//   console.log('b changed', p1, p2);
 // });
 
-// watcher.addListener('b.c', (a, b) => {
-//   console.log('b.c changed', a, b);
+// watcher.addListener('b.c', (p1, p2) => {
+//   console.log('b.c changed', p1, p2);
 // });
 
 // owner.b = { c: 15 };
