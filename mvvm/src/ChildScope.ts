@@ -1,15 +1,17 @@
-import IOwner from "./IOwner";
-import Watcher from "./Watcher";
-import Compiler from "./Complier";
-import { getValue } from "./utils";
+import IOwner from './IOwner';
+import Watcher from './Watcher';
+import Compiler from './Complier';
+import { getValue } from './utils';
 
-export default 
-class ChildScope implements IOwner {
+export default class ChildScope implements IOwner {
   [key: string]: any;
   $parent: IOwner;
   $watcher: Watcher;
   $el: any;
   $complier: Compiler;
+  $parentListener = (n: any, o: any, p: string) => {
+    this.$watcher.trigger(p, n, o);
+  };
 
   constructor(el: any, parent: IOwner) {
     this.$parent = parent;
@@ -18,9 +20,7 @@ class ChildScope implements IOwner {
     this.$complier = new Compiler(this);
     this.$complier.init();
 
-    this.$parent.$watcher.addListener('', (n, o, p) => {
-      this.$watcher.trigger(p, n, o);
-    });
+    this.$parent.$watcher.addListener('', this.$parentListener);
   }
 
   getValue(path: string) {
@@ -40,4 +40,10 @@ class ChildScope implements IOwner {
   getEvent(name: string) {
     return this.$parent.getEvent(name);
   }
-};
+
+  destroy() {
+    this.$complier.destroy();
+    this.$watcher.removeAllListeners();
+    this.$parent.$watcher.removeListener('', this.$parentListener);
+  }
+}

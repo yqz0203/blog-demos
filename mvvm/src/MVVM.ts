@@ -104,6 +104,7 @@ MVVM.directive('model', {
     el.value = binding.value;
   },
   update(el: any, binding) {
+    if (el.value === binding.value) return;
     el.value = binding.value;
   },
   unbind(el) {
@@ -129,6 +130,7 @@ MVVM.directive('if', {
     this.childScope = new ChildScope(this.el, this.$owner);
 
     this.onHide = function() {
+      this.childScope.destroy();
       this.el.replaceWith(this.cEl);
     };
 

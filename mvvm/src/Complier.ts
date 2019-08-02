@@ -142,12 +142,9 @@ class Compiler {
       const { index } = result;
       let tpl = result[1];
       let fullTpl = result[0];
-      let scopeKeys: string[] = tpl.match(
-        /[_-a-zA-z123456789.]+(?!.+\()/g
-      ) as any;
 
       const parsed = parseExpression(tpl, 'this.owner');
-      scopeKeys = parsed.dependencies;
+      let scopeKeys = parsed.dependencies;
 
       const fn = new Function('return ' + parsed.expression).bind(this);
 
@@ -161,9 +158,7 @@ class Compiler {
         },
       ];
 
-      if (!formNode) {
-        result = valueRegexp.exec(template);
-      }
+      result = valueRegexp.exec(template);
     }
 
     const calValue = () => {
@@ -189,13 +184,6 @@ class Compiler {
 
     allScopeKeys.forEach(k => {
       const listener = () => {
-        const val = calValue();
-        // 防止表单元素光标出错
-        if (formNode) {
-          if (formNode.value === val) {
-            return;
-          }
-        }
         setNodeValue(calValue());
       };
       this.owner.$watcher.addListener(k, listener);
