@@ -53,4 +53,6 @@ class Directive {
   }
 }
 
+export const directiveMapping: { [key: string]: DirectiveConfig } = {};
+
 export default Directive;

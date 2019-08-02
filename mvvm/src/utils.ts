@@ -31,7 +31,7 @@ export function mergeDescriptor(a: any, b: any) {
   }
 }
 
-export function parseExpression(expression: string) {
+export function parseExpression(expression: string, scopeName: string = 'this') {
   let index = 0;
   let max = expression.length;
   let result = '';
@@ -77,7 +77,7 @@ export function parseExpression(expression: string) {
       }
 
       dependencies.push(paths.join('.'));
-      result += 'this.' + value + (char || '');
+      result += scopeName + '.' + value + (char || '');
       index++;
       continue;
     }
