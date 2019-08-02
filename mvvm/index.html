@@ -42,7 +42,7 @@
         </button>
       </p>
 
-      <div x-if="showInfo" x-show="showInfo">
+      <div x-if="showInfo" x-show="showInfo" class="{{submiting ? 'submiting' : ''}}">
         <h2>信息</h2>
         <div>当前时间：{{ currentTimeStr }}</div>
         <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
