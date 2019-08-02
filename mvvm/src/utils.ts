@@ -31,7 +31,10 @@ export function mergeDescriptor(a: any, b: any) {
   }
 }
 
-export function parseExpression(expression: string, scopeName: string = 'this') {
+export function parseExpression(
+  expression: string,
+  scopeName: string = 'this'
+) {
   let index = 0;
   let max = expression.length;
   let result = '';
@@ -77,7 +80,7 @@ export function parseExpression(expression: string, scopeName: string = 'this') 
       }
 
       dependencies.push(paths.join('.'));
-      result += scopeName + '.' + value + (char || '');
+      result += scopeName + '.getValue("' + value + (char || '') + '")';
       index++;
       continue;
     }
@@ -108,4 +111,8 @@ export function toRealValue(value: any) {
   }
 
   return value;
+}
+
+export function toArray<T = any>(value: ArrayLike<T>): Array<T> {
+  return Array.prototype.slice.call(value);
 }

@@ -1,7 +1,9 @@
 import Watcher from './Watcher';
-import { setValue } from './utils';
-import { DirectiveConfig, directiveMapping } from './Directive';
+import { setValue, getValue } from './utils';
+import { DirectiveConfig, directiveConfigMap } from './Directive';
 import Compiler from './Complier';
+import IOwner from './IOwner';
+import ChildScope from './ChildScope';
 
 interface MVVMConfig {
   el: HTMLElement;
@@ -12,9 +14,9 @@ interface MVVMConfig {
   methods: any;
 }
 
-class MVVM {
+class MVVM implements IOwner {
   static directive = function(name: string, config: DirectiveConfig) {
-    directiveMapping[name] = config;
+    directiveConfigMap.set(name, config);
   };
 
   $el: HTMLElement;
@@ -42,6 +44,14 @@ class MVVM {
       // @ts-ignore
       this[k] = newData[k];
     });
+  }
+
+  getValue(path: string) {
+    return getValue(this, path);
+  }
+
+  getEvent(name: string) {
+    return this[name];
   }
 
   private initLifeCycles() {
@@ -103,6 +113,42 @@ MVVM.directive('model', {
 
 MVVM.directive('show', (el, binding) => {
   el.style.display = binding.value ? '' : 'none';
+});
+
+MVVM.directive('if', {
+  scoped: true,
+  bind(el: HTMLElement, binding) {
+    const html = el.outerHTML;
+
+    const nEl = document.createElement('div');
+    nEl.innerHTML = html;
+    this.el = nEl.firstChild;
+    this.cEl = document.createComment('-- if block --');
+    el.replaceWith(this.el);
+
+    this.childScope = new ChildScope(this.el, this.$owner);
+
+    this.onHide = function() {
+      this.el.replaceWith(this.cEl);
+    };
+
+    this.onShow = function() {
+      this.cEl.replaceWith(this.el);
+    };
+
+    if (binding.value === false) {
+      this.onHide();
+    } else {
+      this.onShow();
+    }
+  },
+  update(el: any, binding) {
+    if (binding.value === false) {
+      this.onHide();
+    } else {
+      this.onShow();
+    }
+  },
 });
 
 export default MVVM;

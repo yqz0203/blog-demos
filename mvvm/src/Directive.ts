@@ -1,7 +1,7 @@
-import MVVM from './MVVM';
-import { getValue } from './utils';
+import IOwner from './IOwner';
 
 type ObjectDirectiveConfig = {
+  scoped?: boolean;
   bind(this: Directive, el: HTMLElement, binding: any): void;
   update?(this: Directive, el: HTMLElement, binding: any): void;
   unbind?(this: Directive, el: HTMLElement): void;
@@ -14,10 +14,11 @@ export type DirectiveConfig = ObjectDirectiveConfig | FunctionDirectiveConfig;
 class Directive {
   private config: ObjectDirectiveConfig;
   $el: HTMLElement;
-  $owner: MVVM;
+  $owner: IOwner;
+  $scoped: boolean;
   [key: string]: any;
   constructor(
-    owner: MVVM,
+    owner: IOwner,
     el: HTMLElement,
     path: string,
     config: DirectiveConfig
@@ -41,9 +42,11 @@ class Directive {
     });
 
     this.config.bind.call(this, el, {
-      value: getValue(this.$owner, path),
+      value: this.$owner.getValue(path),
       expression: path,
     });
+
+    this.$scoped = this.config.scoped || false;
   }
 
   destroy() {
@@ -53,6 +56,8 @@ class Directive {
   }
 }
 
-export const directiveMapping: { [key: string]: DirectiveConfig } = {};
+export const directiveConfigMap = new Map<string, DirectiveConfig>();
+
+export const DIRECTIVE_PREFIX = 'x-';
 
 export default Directive;

@@ -1,8 +1,9 @@
-import Directive, { directiveMapping } from './Directive';
-import { parseExpression, toRealValue } from './utils';
+import Directive, { directiveConfigMap, DIRECTIVE_PREFIX } from './Directive';
+import { parseExpression, toRealValue, toArray } from './utils';
+import IOwner from './IOwner';
 
 class Compiler {
-  owner: any;
+  owner: IOwner;
   directives: Directive[] = [];
 
   constructor(owner: any) {
@@ -18,7 +19,10 @@ class Compiler {
   }
 
   private traversEL(el: HTMLElement) {
-    this.traversAttr(el);
+    if (this.traversAttr(el) === false) {
+      return;
+    }
+
     for (let i = 0; i < el.childNodes.length; i++) {
       const node: any = el.childNodes[i];
 
@@ -41,43 +45,54 @@ class Compiler {
   }
 
   private traversAttr(node: HTMLElement) {
-    const shouldRemoveAttrs: string[] = [];
+    const attributes = toArray(node.attributes);
 
-    for (let i = 0, l = node.attributes.length; i < l; i++) {
-      const attr = node.attributes[i];
+    let scopedAttr: any;
 
+    attributes.some(item => {
+      const config = directiveConfigMap.get(item.name);
+
+      // if的优先级是最高的
+      if (item.name === DIRECTIVE_PREFIX + 'if') {
+        scopedAttr = item;
+      }
+
+      if (!scopedAttr && typeof config === 'object' && config.scoped) {
+        scopedAttr = item;
+      }
+    });
+
+    if (scopedAttr) {
+      const directive = this.initDirective(node, scopedAttr);
+
+      if (directive && directive.$scoped) {
+        return false;
+      }
+    }
+
+    attributes.forEach(attr => {
       if (!attr) return;
 
-      if (attr.name.startsWith('x-')) {
-        const directiveName = attr.name.replace(/^x-/, '');
-        const dd = directiveMapping[directiveName];
-
-        if (!dd) {
-          console.warn('未知的指令：', directiveName);
-        } else {
-          this.directives.push(new Directive(this.owner, node, attr.value, dd));
-        }
-
-        shouldRemoveAttrs.push(attr.name);
-      }
-      if (attr.name.startsWith(':')) {
+      if (attr.name.startsWith(DIRECTIVE_PREFIX)) {
+        this.initDirective(node, attr);
+      } else if (attr.name.startsWith(':')) {
+        node.removeAttribute(attr.name);
         const attrName = attr.name.substr(1);
+
         this.parseTemplateAndSet('{{' + attr.value + '}}', (val: string) => {
           // @ts-ignore
           node[attrName] = toRealValue(val);
         });
-
-        shouldRemoveAttrs.push(attr.name);
       }
       // @ts-ignore
       else if (attr.name.startsWith('@')) {
+        node.removeAttribute(attr.name);
         const eventName = attr.name.substr(1);
         const eventFuncName = attr.value;
-        if (this.owner[eventFuncName]) {
-          node.addEventListener(eventName, this.owner[eventFuncName]);
+        const cb = this.owner.getEvent(eventFuncName);
+        if (cb) {
+          node.addEventListener(eventName, cb);
         }
-
-        shouldRemoveAttrs.push(attr.name);
       } else {
         let cb = (val: string) => {
           node.setAttribute(attr.name, val);
@@ -85,9 +100,27 @@ class Compiler {
 
         this.parseTemplateAndSet(attr.value, cb);
       }
-    }
+    });
 
-    shouldRemoveAttrs.forEach(name => node.removeAttribute(name));
+    return true;
+  }
+
+  private initDirective(node: any, attr: Attr) {
+    node.removeAttribute(attr.name);
+    const directiveName = attr.name.replace(
+      new RegExp('^' + DIRECTIVE_PREFIX),
+      ''
+    );
+    const dd = directiveConfigMap.get(directiveName);
+
+    if (!dd) {
+      console.warn('未知的指令：', directiveName);
+    } else {
+      const directive = new Directive(this.owner, node, attr.value, dd);
+      this.directives.push(directive);
+
+      return directive;
+    }
   }
 
   private parseTemplateAndSet(

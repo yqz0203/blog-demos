@@ -14,34 +14,18 @@
   <body>
     <div id="app">
       <h2>输入</h2>
+      <div>姓名：<input x-model="name" :disabled="submiting" /></div>
       <div>
-        姓名：<input
-          x-model="name"
-          :disabled="submiting"
-        />
+        年龄：<input type="number" x-model="age" :disabled="submiting" />
       </div>
       <div>
-        年龄：<input
-          type="number"
-          x-model="age"
-          :disabled="submiting"
-        />
-      </div>
-      <div>
-        性别：<select
-          x-model="gender"
-          :disabled="submiting"
-        >
+        性别：<select x-model="gender" :disabled="submiting">
           <option value="1">男</option>
           <option value="0">女</option>
         </select>
       </div>
       <div>
-        爱好：<input
-          type="text"
-          x-model="extra.like"
-          :disabled="submiting"
-        />
+        爱好：<input type="text" x-model="extra.like" :disabled="submiting" />
       </div>
       <p>
         <button @click="changeGender">点我变性</button>
@@ -58,7 +42,7 @@
         </button>
       </p>
 
-      <div x-show="showInfo">
+      <div x-if="showInfo" x-show="showInfo">
         <h2>信息</h2>
         <div>当前时间：{{ currentTimeStr }}</div>
         <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
@@ -67,6 +51,15 @@
           性别：<span>{{ genderText }}</span>
         </div>
         <div>爱好：{{ extra.like }}</div>
+        <p>
+          <button
+            @click="submit"
+            :disabled="submiting"
+            class="{{ submiting ? 'submiting' : '' }}"
+          >
+            {{ submiting ? '提交中...' : '另一个提交' }}
+          </button>
+        </p>
       </div>
     </div>
 
