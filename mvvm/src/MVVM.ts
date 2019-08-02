@@ -120,21 +120,21 @@ MVVM.directive('if', {
   scoped: true,
   bind(el: HTMLElement, binding) {
     const html = el.outerHTML;
-
-    const nEl = document.createElement('div');
-    nEl.innerHTML = html;
-    this.el = nEl.firstChild;
     this.cEl = document.createComment('-- if block --');
-    el.replaceWith(this.el);
-
-    this.childScope = new ChildScope(this.el, this.$owner);
-
+    this.el = el;
     this.onHide = function() {
-      this.childScope.destroy();
+      this.childScope && this.childScope.destroy();
       this.el.replaceWith(this.cEl);
     };
 
     this.onShow = function() {
+      let nEl: any = document.createElement('div');
+      nEl.innerHTML = html;
+      nEl = nEl.firstChild;
+
+      this.el.replaceWith(nEl);
+      this.el = nEl;
+      this.childScope = new ChildScope(this.el, this.$owner);
       this.cEl.replaceWith(this.el);
     };
 
