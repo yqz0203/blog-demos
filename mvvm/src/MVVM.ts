@@ -1,7 +1,7 @@
 import Watcher from './Watcher';
 import { setValue, getValue } from './utils';
 import { DirectiveConfig, directiveConfigMap } from './Directive';
-import Compiler from './Complier';
+import Compiler from './Compiler';
 import IOwner from './IOwner';
 import ChildScope from './ChildScope';
 

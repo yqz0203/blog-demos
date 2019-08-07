@@ -1,5 +1,5 @@
 import Watcher from './Watcher';
-import Compiler from './Complier';
+import Compiler from './Compiler';
 
 export default interface IOwner {
   $el: HTMLElement;

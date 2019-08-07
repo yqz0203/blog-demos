@@ -1,6 +1,6 @@
 import IOwner from './IOwner';
 import Watcher from './Watcher';
-import Compiler from './Complier';
+import Compiler from './Compiler';
 import { getValue } from './utils';
 
 export default class ChildScope implements IOwner {
