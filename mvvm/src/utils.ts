@@ -72,17 +72,22 @@ export function parseExpression(
         } else {
           path += char;
         }
-        char = expression[++index];
+        char = expression[++index] || '';
       }
 
-      if (/^[A-Za-z_0-9]+$/.test(path)) {
-        paths.push(path);
-      }
+      // 特殊值
+      if (['true', 'false', 'null', 'undefined'].indexOf(path) >= 0) {
+        result += path;
+      } else {
+        if (/^[A-Za-z_0-9]+$/.test(path)) {
+          paths.push(path);
+        }
 
-      dependencies.push(paths.join('.'));
-      result += scopeName + '.getValue("' + value + (char || '') + '")';
-      index++;
-      continue;
+        dependencies.push(paths.join('.'));
+        result += scopeName + '.getValue("' + value + '")';
+        index++;
+        continue;
+      }
     }
 
     result += char;

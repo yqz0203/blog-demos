@@ -73,9 +73,12 @@ class Compiler {
     attributes.forEach(attr => {
       if (!attr) return;
 
+      // 指令
       if (attr.name.startsWith(DIRECTIVE_PREFIX)) {
         this.initDirective(node, attr);
-      } else if (attr.name.startsWith(':')) {
+      }
+      // dom属性
+      else if (attr.name.startsWith(':')) {
         node.removeAttribute(attr.name);
         const attrName = attr.name.substr(1);
 
@@ -85,6 +88,7 @@ class Compiler {
         });
       }
       // @ts-ignore
+      // 回调函数
       else if (attr.name.startsWith('@')) {
         node.removeAttribute(attr.name);
         const eventName = attr.name.substr(1);
@@ -93,7 +97,9 @@ class Compiler {
         if (cb) {
           node.addEventListener(eventName, cb);
         }
-      } else {
+      }
+      // html属性
+      else {
         let cb = (val: string) => {
           node.setAttribute(attr.name, val);
         };
@@ -125,8 +131,7 @@ class Compiler {
 
   private parseTemplateAndSet(
     template: string,
-    setNodeValue: (val: string) => void,
-    formNode?: any
+    setNodeValue: (val: string) => void
   ) {
     const valueRegexp = /{{([^}]+)}}/g;
 
