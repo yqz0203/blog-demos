@@ -51,7 +51,7 @@ class MVVM implements IOwner {
   }
 
   getEvent(name: string) {
-    return this[name];
+    return this[name] ? this[name].bind(this) : '';
   }
 
   private initLifeCycles() {

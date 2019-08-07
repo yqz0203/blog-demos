@@ -28,7 +28,7 @@
         爱好：<input type="text" x-model="extra.like" :disabled="submiting" />
       </div>
       <p>
-        <button @click="changeGender">点我变性</button>
+        <button @click="changeGender(gender)">点我变性</button>
         <button @click="toggleShowInfo">
           {{ showInfo ? '隐藏信息' : '显示信息' }}
         </button>
@@ -42,10 +42,14 @@
         </button>
       </p>
 
-      <div x-if="showInfo" x-show="showInfo" class="{{submiting ? 'submiting' : ''}}">
+      <div
+        x-if="showInfo"
+        x-show="showInfo"
+        class="{{ submiting ? 'submiting' : '' }}"
+      >
         <h2>信息</h2>
         <div>当前时间：{{ currentTimeStr }}</div>
-        <div>全名：{{ name.toUpperCase() + ' snow'}}</div>
+        <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
         <div>年龄：{{ age }}</div>
         <div>
           性别：<span>{{ genderText }}</span>

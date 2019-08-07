@@ -92,10 +92,27 @@ class Compiler {
       else if (attr.name.startsWith('@')) {
         node.removeAttribute(attr.name);
         const eventName = attr.name.substr(1);
-        const eventFuncName = attr.value;
-        const cb = this.owner.getEvent(eventFuncName);
+        let eventFuncName = attr.value;
+        const parseds: Array<ReturnType<typeof parseExpression>> = [];
+        const matched = eventFuncName.match(/([^()]+)\((.+)\)/);
+        // 带参数的回调
+        if (matched) {
+          eventFuncName = matched[1];
+          const params = matched[2];
+          params.split(',').forEach(p => {
+            const parsed = parseExpression(p, 'this.owner');
+            parseds.push(parsed);
+          });
+        }
+
+        const cb = this.owner.getEvent(eventFuncName.trim());
         if (cb) {
-          node.addEventListener(eventName, cb);
+          const funcs = parseds.map(parsed => {
+            return new Function('return ' + parsed.expression).bind(this);
+          });
+          node.addEventListener(eventName, e => {
+            cb.apply(null, [e, ...funcs.map(func => func())]);
+          });
         }
       }
       // html属性

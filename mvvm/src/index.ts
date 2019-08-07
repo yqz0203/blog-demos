@@ -33,7 +33,8 @@ new MVVM({
     },
   },
   methods: {
-    changeGender() {
+    changeGender(...args: any) {
+      console.log(args);
       this.gender = this.gender == 1 ? 0 : 1;
     },
 
