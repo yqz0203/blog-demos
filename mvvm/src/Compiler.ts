@@ -6,7 +6,7 @@ class Compiler {
   owner: IOwner;
   directives: Directive[] = [];
 
-  constructor(owner: any) {
+  constructor(owner: IOwner) {
     this.owner = owner;
   }
 
