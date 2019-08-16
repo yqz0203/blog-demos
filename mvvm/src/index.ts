@@ -21,7 +21,7 @@ new MVVM({
       this.currentTime = new Date();
     }, 1000);
   },
-  destroy(this: any) {
+  destroyed(this: any) {
     clearInterval(this.interval);
   },
   computed: {
@@ -30,6 +30,11 @@ new MVVM({
     },
     currentTimeStr() {
       return this.currentTime.toLocaleString();
+    },
+  },
+  watch: {
+    currentTime: function(value) {
+      console.log(value);
     },
   },
   methods: {

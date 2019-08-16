@@ -9,7 +9,8 @@ interface MVVMConfig {
   el: HTMLElement;
   data: any;
   created?: () => void;
-  destroy?: () => void;
+  destroyed?: () => void;
+  watch?: { [key: string]: (newValue: any, oldValue: any) => void };
   computed: any;
   methods: any;
 }
@@ -35,6 +36,7 @@ class MVVM implements IOwner {
     this.initMethods();
     this.$complier.init();
     this.initComputed();
+    this.initWatch();
     this.created(this);
   }
 
@@ -59,10 +61,10 @@ class MVVM implements IOwner {
       this.config.created && this.config.created.call(this);
     };
 
-    this['destroy'] = () => {
+    this['destroyed'] = () => {
       this.$complier.destroy();
       this.$watcher.removeAllListeners();
-      this.config.destroy && this.config.destroy.call(this);
+      this.config.destroyed && this.config.destroyed.call(this);
     };
   }
 
@@ -82,6 +84,16 @@ class MVVM implements IOwner {
     computedKeys.forEach(ckey => {
       this[ckey] = computed[ckey].call(this);
       this.$watcher.trigger(ckey, this[ckey], '');
+    });
+  }
+
+  private initWatch() {
+    const watch = this.config.watch || {};
+    const watchKeys = Object.keys(watch);
+    watchKeys.forEach(key => {
+      this.$watcher.addListener(key, (n, o, key) => {
+        watch[key].call(this, n, o);
+      });
     });
   }
 
