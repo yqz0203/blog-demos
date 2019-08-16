@@ -32,12 +32,11 @@ class MVVM implements IOwner {
     this.$complier = new Compiler(this);
     this.config = config;
 
-    this.initLifeCycles();
     this.initMethods();
-    this.$complier.init();
     this.initComputed();
     this.initWatch();
-    this.created(this);
+    this.$complier.init();
+    this.config.created && this.config.created.call(this);
   }
 
   setData(newData: any) {
@@ -56,34 +55,35 @@ class MVVM implements IOwner {
     return this[name] ? this[name].bind(this) : '';
   }
 
-  private initLifeCycles() {
-    this['created'] = () => {
-      this.config.created && this.config.created.call(this);
-    };
-
-    this['destroyed'] = () => {
-      this.$complier.destroy();
-      this.$watcher.removeAllListeners();
-      this.config.destroyed && this.config.destroyed.call(this);
-    };
+  destroy() {
+    this.$complier.destroy();
+    this.$watcher.removeAllListeners();
+    this.config.destroyed && this.config.destroyed.call(this);
   }
 
   private initComputed() {
     const computed = this.config.computed || {};
-
     const computedKeys = Object.keys(computed);
-    this.$watcher.addListener('', (n, o, key) => {
-      if (computedKeys.indexOf(key) >= 0) {
-        return;
-      }
-      computedKeys.forEach(ckey => {
-        this[ckey] = computed[ckey].call(this);
-        this.$watcher.trigger(ckey, this[ckey], '');
-      });
-    });
+
     computedKeys.forEach(ckey => {
-      this[ckey] = computed[ckey].call(this);
-      this.$watcher.trigger(ckey, this[ckey], '');
+      if (typeof computed[ckey] === 'function') {
+        const cb = () => {
+          this[ckey] = computed[ckey].call(this);
+          this.$watcher.trigger(ckey, this[ckey], '');
+        };
+        this.$watcher.addListener('', cb);
+      } else if (Array.isArray(computed[ckey])) {
+        const value = [...computed[ckey]];
+        const fn = value.pop();
+        value.forEach(path => {
+          const cb = () => {
+            this[ckey] = fn.call(this);
+            this.$watcher.trigger(ckey, this[ckey], '');
+          };
+          this.$watcher.addListener(path, cb);
+          cb();
+        });
+      }
     });
   }
 
@@ -98,7 +98,7 @@ class MVVM implements IOwner {
   }
 
   private initMethods() {
-    Object.keys(this.config.methods).forEach(key => {
+    Object.keys(this.config.methods || {}).forEach(key => {
       // @ts-ignore
       this[key] = this.config.methods[key].bind(this);
     });
