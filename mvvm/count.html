@@ -9,7 +9,8 @@
   <body>
     <div id="app">
       <span>点击了：{{ count }}次</span>
-      <button @click="add">add</button>
+      <button @click="add(1)">add</button>
+      <button @click="add(4)">add4</button>
     </div>
 
     <script src="./dist/main.js"></script>
@@ -21,8 +22,8 @@
           count: 0,
         },
         methods: {
-          add() {
-            this.count += 1;
+          add(e, count) {
+            this.count += count;
           },
         },
       });
