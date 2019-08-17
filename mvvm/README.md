@@ -2,7 +2,7 @@
 
 ## Run
 
-### Fisrt
+### First
 
 ``` bash
 yarn i
