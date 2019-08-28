@@ -57,6 +57,16 @@ export function parseExpression(
       continue;
     }
 
+    if (char === '{' || char === ',') {
+      result += char;
+      char = expression.charAt(++index);
+      while (char !== ':') {
+        result += char;
+        char = expression.charAt(++index);
+      }
+      continue;
+    }
+
     let VARIABLES = /[A-Za-z_]/;
     if (VARIABLES.test(char)) {
       let value = '';
@@ -75,6 +85,9 @@ export function parseExpression(
         char = expression[++index] || '';
       }
 
+      index--;
+      char = '';
+
       // 特殊值
       if (['true', 'false', 'null', 'undefined'].indexOf(path) >= 0) {
         result += path;
@@ -85,8 +98,6 @@ export function parseExpression(
 
         dependencies.push(paths.join('.'));
         result += scopeName + '.getValue("' + value + '")';
-        index++;
-        continue;
       }
     }
 

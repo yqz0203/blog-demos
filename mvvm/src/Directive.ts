@@ -1,4 +1,5 @@
 import IOwner from './IOwner';
+import { parseExpression } from './utils';
 
 type ObjectDirectiveConfig = {
   scoped?: boolean;
@@ -13,6 +14,8 @@ export type DirectiveConfig = ObjectDirectiveConfig | FunctionDirectiveConfig;
 
 class Directive {
   private config: ObjectDirectiveConfig;
+  private listener: () => void;
+  private removeListeners: () => void;
   $el: HTMLElement;
   $owner: IOwner;
   $scoped: boolean;
@@ -35,14 +38,28 @@ class Directive {
       this.config = config;
     }
 
-    this.$owner.$watcher.addListener(path, val => {
+    const { expression, dependencies } = parseExpression(path, 'this.$owner');
+    const fn = new Function('return ' + expression).bind(this);
+
+    this.listener = () => {
+      const value = fn();
       if (this.config.update) {
-        this.config.update.call(this, el, { value: val, expression: path });
+        this.config.update.call(this, el, { value, expression: path });
       }
+    };
+
+    dependencies.forEach(dp => {
+      this.$owner.$watcher.addListener(dp, this.listener);
     });
 
+    this.removeListeners = () => {
+      dependencies.forEach(dp =>
+        this.$owner.$watcher.removeListener(dp, this.listener)
+      );
+    };
+
     this.config.bind.call(this, el, {
-      value: this.$owner.getValue(path),
+      value: fn(),
       expression: path,
     });
 
@@ -53,6 +70,7 @@ class Directive {
     if (this.config.unbind) {
       this.config.unbind.call(this, this.$el);
     }
+    this.removeListeners();
   }
 }
 
