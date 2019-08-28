@@ -1,9 +1,9 @@
-import IOwner from './IOwner';
+import { IOwner, IDestroy } from './typing';
 import Watcher from './Watcher';
 import Compiler from './Compiler';
 import { getValue } from './utils';
 
-export default class ChildScope implements IOwner {
+export default class ChildScope implements IOwner, IDestroy {
   [key: string]: any;
   $parent: IOwner;
   $watcher: Watcher;

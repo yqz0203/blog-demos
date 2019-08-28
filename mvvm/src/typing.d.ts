@@ -1,7 +1,7 @@
 import Watcher from './Watcher';
 import Compiler from './Compiler';
 
-export default interface IOwner {
+export interface IOwner {
   $el: HTMLElement;
   $watcher: Watcher;
   $complier: Compiler;
@@ -9,4 +9,8 @@ export default interface IOwner {
   setData(newData: any): void;
   getValue(path: string): any;
   getEvent(name: string): (e: Event, ...args: any[]) => void;
+}
+
+export interface IDestroy {
+  destroy(): void;
 }

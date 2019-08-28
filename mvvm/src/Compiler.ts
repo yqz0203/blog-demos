@@ -1,8 +1,8 @@
 import Directive, { directiveConfigMap, DIRECTIVE_PREFIX } from './Directive';
 import { parseExpression, toRealValue, toArray } from './utils';
-import IOwner from './IOwner';
+import { IOwner, IDestroy } from './typing';
 
-class Compiler {
+class Compiler implements IDestroy {
   owner: IOwner;
   directives: Directive[] = [];
 

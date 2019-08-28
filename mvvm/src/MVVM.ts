@@ -2,7 +2,7 @@ import Watcher from './Watcher';
 import { setValue, getValue } from './utils';
 import { DirectiveConfig, directiveConfigMap } from './Directive';
 import Compiler from './Compiler';
-import IOwner from './IOwner';
+import { IOwner } from './typing';
 import ChildScope from './ChildScope';
 
 interface MVVMConfig {

@@ -1,4 +1,4 @@
-import IOwner from './IOwner';
+import { IOwner, IDestroy } from './typing';
 import { parseExpression } from './utils';
 
 type ObjectDirectiveConfig = {
@@ -12,7 +12,7 @@ type FunctionDirectiveConfig = (el: HTMLElement, binding: any) => void;
 
 export type DirectiveConfig = ObjectDirectiveConfig | FunctionDirectiveConfig;
 
-class Directive {
+class Directive implements IDestroy {
   private config: ObjectDirectiveConfig;
   private listener: () => void;
   private removeListeners: () => void;
@@ -23,7 +23,7 @@ class Directive {
   constructor(
     owner: IOwner,
     el: HTMLElement,
-    path: string,
+    exp: string,
     config: DirectiveConfig
   ) {
     this.$el = el;
@@ -38,13 +38,13 @@ class Directive {
       this.config = config;
     }
 
-    const { expression, dependencies } = parseExpression(path, 'this.$owner');
+    const { expression, dependencies } = parseExpression(exp, 'this.$owner');
     const fn = new Function('return ' + expression).bind(this);
 
     this.listener = () => {
       const value = fn();
       if (this.config.update) {
-        this.config.update.call(this, el, { value, expression: path });
+        this.config.update.call(this, el, { value, expression: exp });
       }
     };
 
@@ -60,7 +60,7 @@ class Directive {
 
     this.config.bind.call(this, el, {
       value: fn(),
-      expression: path,
+      expression: exp,
     });
 
     this.$scoped = this.config.scoped || false;

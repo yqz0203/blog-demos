@@ -1,4 +1,5 @@
 import { getValue, isPlainObject, mergeDescriptor } from './utils';
+import { IDestroy } from './typing';
 
 type Callback = (val: any, oldValue: any) => void;
 type CallbackWithPath = (val: any, oldValue: any, path: string) => void;
@@ -31,7 +32,7 @@ class Token {
 
 const GLOABL_KEY = 'GLOABL';
 
-class Watcher {
+class Watcher implements IDestroy {
   owner: any;
   listeners: {
     [path: string]: CallbackWithPath[];
@@ -112,6 +113,10 @@ class Watcher {
 
   removeAllListeners() {
     this.listeners = {};
+  }
+
+  destroy() {
+    this.removeAllListeners();
   }
 
   trigger(path: string, newValue: any, oldValue: any) {
