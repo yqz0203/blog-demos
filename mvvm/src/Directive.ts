@@ -19,6 +19,7 @@ class Directive implements IDestroy {
   $el: HTMLElement;
   $owner: IOwner;
   $scoped: boolean;
+  oldValue: any;
   [key: string]: any;
   constructor(
     owner: IOwner,
@@ -43,9 +44,11 @@ class Directive implements IDestroy {
 
     this.listener = () => {
       const value = fn();
-      if (this.config.update) {
+      if (this.config.update && this.oldValue !== value) {
         this.config.update.call(this, el, { value, expression: exp });
       }
+
+      this.oldValue = value;
     };
 
     dependencies.forEach(dp => {
@@ -62,6 +65,8 @@ class Directive implements IDestroy {
       value: fn(),
       expression: exp,
     });
+
+    this.oldValue = fn();
 
     this.$scoped = this.config.scoped || false;
   }
