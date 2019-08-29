@@ -42,8 +42,7 @@ class MVVM implements IOwner {
   setData(newData: any) {
     if (!newData) return;
     Object.keys(newData).forEach(k => {
-      // @ts-ignore
-      this[k] = newData[k];
+      setValue(this, k, newData[k]);
     });
   }
 

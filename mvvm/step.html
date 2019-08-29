@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+
+    <style>
+      input:disabled {
+        color: #ccc;
+      }
+      section {
+        padding-bottom: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div x-if="!complete">
+        <h2><span x-if="step === 1">欢迎注册，</span>第 {{ step }} 步</h2>
+        <section x-if="step === 1">
+          姓名：<input x-model="value1" :disabled="submiting" />
+        </section>
+        <section x-if="step === 2">
+          性别：<select x-model="value2" :disabled="submiting">
+            <option value="">请选择</option>
+            <option value="1">男</option>
+            <option value="0">女</option>
+          </select>
+        </section>
+        <section x-if="step === 3">
+          公司：<input x-model="value3" :disabled="submiting" />
+        </section>
+        <button @click="next">{{ step === 3 ? '提交' : '下一步' }}</button>
+      </div>
+
+      <div x-if="complete">
+        <h2>您的信息：</h2>
+        <p>姓名：{{ value1 }}</p>
+        <p>性别：{{ gender }}</p>
+        <p>公司：{{ value3 }}</p>
+      </div>
+    </div>
+
+    <script src="./dist/main.js"></script>
+
+    <script>
+      new MVVM({
+        el: document.getElementById('app'),
+        data: {
+          complete: false,
+          submiting: false,
+          step: 1,
+          value1: '',
+          value2: '',
+          value3: '',
+        },
+        computed: {
+          gender: [
+            'value2',
+            function() {
+              switch (this.value2) {
+                case '1':
+                  return '男';
+                case '2':
+                  return '女';
+              }
+              return '未知';
+            },
+          ],
+        },
+        methods: {
+          next(e, count) {
+            this.submiting = true;
+
+            setTimeout(() => {
+              this.submiting = false;
+
+              if (this.step === 3) {
+                this.complete = true;
+                return;
+              }
+              this.step++;
+            }, 1000);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
