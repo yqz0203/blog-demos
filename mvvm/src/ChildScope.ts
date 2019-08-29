@@ -13,10 +13,10 @@ export default class ChildScope implements IOwner, IDestroy {
     this.$watcher.trigger(p, n, o);
   };
 
-  constructor(el: any, parent: IOwner) {
+  constructor(el: any, parent: IOwner, data: any = {}) {
     this.$parent = parent;
     this.$el = el;
-    this.$watcher = new Watcher(this, {});
+    this.$watcher = new Watcher(this, data);
     this.$complier = new Compiler(this);
     this.$complier.init();
 

@@ -47,6 +47,7 @@
         x-show="showInfo"
         class="{{ submiting ? 'submiting' : '' }}"
       >
+        <div>姓名：<input x-model="name" :disabled="submiting" /></div>
         <h2>信息</h2>
         <div>当前时间：{{ currentTimeStr }}</div>
         <div>全名：{{ name.toUpperCase() + ' snow' }}</div>
@@ -109,7 +110,7 @@
         },
         watch: {
           currentTime: function(value) {
-            console.log(value);
+            // console.log(value);
           },
         },
         methods: {

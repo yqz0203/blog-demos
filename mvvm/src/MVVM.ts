@@ -110,7 +110,7 @@ MVVM.directive('model', {
   bind(el: any, binding) {
     this.callback = (e: any) => {
       const val = e.target.value;
-      setValue(this.$owner, binding.expression, val);
+      this.$owner.setData({ [binding.expression]: val });
     };
     el.addEventListener('input', this.callback);
     el.value = binding.value;
