@@ -10,7 +10,7 @@ const server = http.createServer((req, res) => {
     // res.setHeader('Vary', '*');
 
     /** cache-control */
-    // res.setHeader('Cache-Control', 'private, max-age=100000');
+    res.setHeader('Cache-Control', 'public, max-age=50');
     // res.setHeader('Pragma', 'no-cache');
     res.write(fs.readFileSync('index.js'));
 
