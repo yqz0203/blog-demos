@@ -10,18 +10,18 @@ const server = http.createServer((req, res) => {
     // res.setHeader('Vary', '*');
 
     /** cache-control */
-    res.setHeader('Cache-Control', 'public, max-age=50');
+    res.setHeader('Cache-Control', 'no-cache');
     // res.setHeader('Pragma', 'no-cache');
-    res.write(fs.readFileSync('index.js'));
+    // res.write(fs.readFileSync('index.js'));
 
     /** Last-Modified */
-    // const mtime = fs.statSync('index.js').mtime.toUTCString();
-    // res.setHeader('Last-Modified', mtime);
-    // if (req.headers['if-modified-since'] === mtime) {
-    //   res.statusCode = 304;
-    // } else {
-    //   res.write(fs.readFileSync('index.js'));
-    // }
+    const mtime = fs.statSync('index.js').mtime.toUTCString();
+    res.setHeader('Last-Modified', mtime);
+    if (req.headers['if-modified-since'] === mtime) {
+      res.statusCode = 304;
+    } else {
+      res.write(fs.readFileSync('index.js'));
+    }
 
     /** Etag */
     // const hash = 'aaaaaaaaaaaaaa';
