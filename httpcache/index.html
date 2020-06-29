@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Http demo</title>
-    <script src="/index.js?v=2"></script>
     <style>
       body {
         background: #fff;
       }
     </style>
   </head>
-  <body></body>
+  <body>
+    <button onclick="load()">加载</button>
+
+    <script>
+      function load() {
+        var script = document.createElement('script');
+        script.src = '/index.js?v=2';
+        document.body.appendChild(script);
+      }
+    </script>
+  </body>
 </html>

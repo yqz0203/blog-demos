@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 
 const server = http.createServer((req, res) => {
+  res.setHeader('Cache-Control', 'max-age=3600000');
   console.log(new Date(), 'Requset reached', req.url);
   if (req.url.startsWith('/index.js')) {
     res.setHeader('Content-Type', 'application/javascript');
@@ -10,18 +11,18 @@ const server = http.createServer((req, res) => {
     // res.setHeader('Vary', '*');
 
     /** cache-control */
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'max-age=3600000');
     // res.setHeader('Pragma', 'no-cache');
-    // res.write(fs.readFileSync('index.js'));
+    res.write(fs.readFileSync('index.js'));
 
     /** Last-Modified */
-    const mtime = fs.statSync('index.js').mtime.toUTCString();
-    res.setHeader('Last-Modified', mtime);
-    if (req.headers['if-modified-since'] === mtime) {
-      res.statusCode = 304;
-    } else {
-      res.write(fs.readFileSync('index.js'));
-    }
+    // const mtime = fs.statSync('index.js').mtime.toUTCString();
+    // res.setHeader('Last-Modified', mtime);
+    // if (req.headers['if-modified-since'] === mtime) {
+    //   res.statusCode = 304;
+    // } else {
+    //   res.write(fs.readFileSync('index.js'));
+    // }
 
     /** Etag */
     // const hash = 'aaaaaaaaaaaaaa';
